@@ -1,0 +1,7 @@
+{
+  "name": "dom-floral",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node server.mjs", "check": "node --check dist/gift-model.js && node --check dist/gift-renderer.js && node --check dist/gift-studio.js && node --check dist/app.js && node --check dist/experience.js && node --check dist/art-direction.js && node --check server.mjs", "test": "node --test test/*.test.mjs" }
+}

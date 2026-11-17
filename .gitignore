@@ -1,0 +1,7 @@
+node_modules/
+.sites-local/
+*.tar.gz
+*.log
+preview-*.png
+.preview-chrome/
+.art-preview-profile/
