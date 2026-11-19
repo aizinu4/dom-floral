@@ -1,0 +1,36 @@
+/* New specimens share the original sprite API used throughout the artbook. */
+.sprite-6,.sprite-7,.sprite-8,.sprite-9{background-image:url('assets/flower-stems-new.png');background-size:200% 200%}
+.sprite-6{background-position:0 0}.sprite-7{background-position:100% 0}.sprite-8{background-position:0 100%}.sprite-9{background-position:100% 100%}
+.studio-catalog{grid-template-columns:repeat(2,minmax(0,1fr))}
+.studio-card{min-width:0}
+.studio-card-image{display:flex;align-items:center;justify-content:center}
+.studio-card-image .sprite{width:100%;max-width:105px;height:auto;aspect-ratio:1}
+.studio-card h4{line-height:1.55;min-height:3.1em;overflow-wrap:anywhere}
+.placed-stem,.placed-stem.active,.placed-stem:focus-visible{padding:0;border:0!important;background:transparent!important;outline:none;box-shadow:none}
+.placed-stem .stem-art{display:block;width:100%;height:100%;pointer-events:none}
+.placed-stem.active .stem-art,.placed-stem:focus-visible .stem-art{filter:drop-shadow(1px 0 1px #7e916e) drop-shadow(-1px 0 1px #7e916e)}
+.stem-finish{padding:20px 22px 18px;background:#f0f0e6;border-top:1px solid #dfe1d4}
+.stem-finish[hidden]{display:none}
+.stem-finish-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}
+.stem-finish-heading>span{font-size:8px;letter-spacing:1.5px;color:#66745e}
+.stem-finish-heading>button{font:inherit;font-size:9px;color:#68735e;border:0;border-bottom:1px solid #b4bdab;background:none;padding:3px 0;cursor:pointer}
+.stem-finish-heading>button:disabled{opacity:.4;cursor:default}
+.stem-finish-options{display:grid;grid-template-columns:1fr 1.25fr;gap:22px}
+.stem-field-label{font-size:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;color:#354e3f}
+.stem-field-label output{font-size:10px;color:#7c5760;white-space:nowrap}
+.stem-leaf-options{display:flex;border:1px solid #d5dbc9;border-radius:4px;overflow:hidden}
+.stem-leaf-options button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:35px;padding:5px 8px;border:0;background:#faf9f2;color:#66745e;font:inherit;font-size:10px;cursor:pointer}
+.stem-leaf-options button+button{border-left:1px solid #d5dbc9}
+.stem-leaf-options button[aria-pressed=true]{background:#3f5645;color:#fffdf6}
+.stem-leaf-options button:disabled{opacity:.5;cursor:default}
+.stem-leaf-options span{font-size:16px}
+.stem-finish small{display:block;font-size:8px;line-height:1.7;color:#7b8271;margin-top:8px}
+.stem-trim-field input{display:block;width:100%;accent-color:#536a49;height:22px;margin:0;cursor:ew-resize}
+.stem-trim-presets{display:flex;gap:6px;margin-top:6px}
+.stem-trim-presets button{flex:1;border:1px solid #d5dbc9;background:#faf9f2;border-radius:3px;color:#66745e;padding:5px 3px;font:inherit;font-size:8px;cursor:pointer}
+.stem-trim-presets button[aria-pressed=true]{border-color:#7d8d6b;background:#e1e6d6;color:#354e3f}
+.stem-finish button:focus-visible,.stem-finish input:focus-visible{outline:2px solid #7d8d6b;outline-offset:3px}
+.order-stem-finishes{padding-top:10px;border-top:1px solid #dce0d4;margin-top:12px}
+.order-stem-finishes p{font-size:10px;line-height:1.8;margin:5px 0}
+@media(max-width:620px){.studio-card{min-width:92px}.stem-finish{padding:17px 14px}.stem-finish-options{gap:14px}.stem-finish-heading>span{font-size:7px;letter-spacing:1px}.stem-field-label{font-size:10px}.stem-leaf-options button{font-size:9px;padding-inline:5px;gap:5px}.stem-finish small{font-size:7px}}
+@media(max-width:370px){.stem-finish-options{grid-template-columns:1fr}.stem-finish-options>div+div{padding-top:12px;border-top:1px solid #d5dbc9}}

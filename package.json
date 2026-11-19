@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node server.mjs", "check": "node --check dist/gift-model.js && node --check dist/gift-renderer.js && node --check dist/gift-studio.js && node --check dist/app.js && node --check dist/experience.js && node --check dist/art-direction.js && node --check server.mjs", "test": "node --test test/*.test.mjs" }
+  "scripts": {
+    "dev": "node server.mjs",
+    "check": "node --check dist/stem-model.js && node --check dist/stem-art.js && node --check dist/stem-studio.js && node --check dist/shop-data.js && node --check dist/shop.js && node --check dist/gift-model.js && node --check dist/gift-renderer.js && node --check dist/gift-studio.js && node --check dist/app.js && node --check dist/experience.js && node --check dist/art-direction.js && node --check server.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
 }

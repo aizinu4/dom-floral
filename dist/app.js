@@ -7,7 +7,11 @@ const FLOWERS = [
   { id: 'stock', name: 'Stock tím', latin: 'Soft little dreams', price: 25000, type: 'flower', tag: 'MỘT CHÚT MƠ', sprite: 2 },
   { id: 'daisy', name: 'Cúc tana', latin: 'Little happy things', price: 20000, type: 'leaf', tag: 'NHỎ MÀ XINH', sprite: 3 },
   { id: 'lisianthus', name: 'Cát tường trắng', latin: 'A gentle beginning', price: 30000, type: 'flower', tag: 'TRONG TRẺO', sprite: 4 },
-  { id: 'eucalyptus', name: 'Lá eucalyptus', latin: 'A breath of green', price: 15000, type: 'leaf', tag: 'MỘT CHÚT XANH', sprite: 5 },
+  { id: 'eucalyptus', name: 'Lá eucalyptus', latin: 'A breath of green', price: 15000, type: 'leaf', tag: 'MỘT CHÚT XANH', sprite: 5, foliageOnly: true },
+  { id: 'calla', name: 'Calla đỏ rượu', latin: 'A sculptural little love', price: 45000, type: 'flower', tag: 'MỘT NÉT RIÊNG', sprite: 6 },
+  { id: 'gerbera', name: 'Đồng tiền cam đào', latin: 'A pocketful of sunshine', price: 25000, type: 'flower', tag: 'ẤM ÁP MỘT CHÚT', sprite: 7 },
+  { id: 'carnation', name: 'Cẩm chướng hồng', latin: 'Soft as a whispered wish', price: 25000, type: 'flower', tag: 'NHẸ NHƯ MÂY', sprite: 8 },
+  { id: 'sunflower', name: 'Hướng dương vàng bơ', latin: 'Turn toward the light', price: 35000, type: 'flower', tag: 'MANG THEO NẮNG', sprite: 9 },
 ];
 const PAPERS = { cream: { name: 'Kem bơ', color: '#e5d9bd' }, pink: { name: 'Hồng phấn', color: '#dfb5b5' }, sage: { name: 'Xanh sage', color: '#aebda1' }, lilac: { name: 'Tím nhạt', color: '#bca9c6' } };
 const RIBBONS = { wine: { name: 'Đỏ rượu', color: '#865559' }, moss: { name: 'Xanh rêu', color: '#566b4c' }, ivory: { name: 'Kem sữa', color: '#d9caac' } };
@@ -39,7 +43,7 @@ try {
     state.title = typeof saved.title === 'string' ? saved.title.slice(0, 50) : '';
     state.author = typeof saved.author === 'string' ? saved.author.slice(0, 40) : '';
     state.cardMessage = typeof saved.cardMessage === 'string' ? saved.cardMessage.slice(0, 160) : '';
-    state.stems = Array.isArray(saved.stems) ? saved.stems.filter(s => s && findFlower(s.flower)).slice(0, 18).map(s => ({ uid: crypto.randomUUID(), flower: s.flower, x: safeNumber(s.x, 50, 8, 92), y: safeNumber(s.y, 42, 15, 75), rotation: safeNumber(s.rotation, 0, -85, 85) })) : [];
+    state.stems = Array.isArray(saved.stems) ? saved.stems.filter(s => s && findFlower(s.flower)).slice(0, 18).map(s => ({ uid: crypto.randomUUID(), flower: s.flower, x: safeNumber(s.x, 50, 8, 92), y: safeNumber(s.y, 42, 15, 75), rotation: safeNumber(s.rotation, 0, -85, 85), ...normalizeStemFinish(s, findFlower(s.flower)) })) : [];
   }
   const savedFavorites = JSON.parse(localStorage.getItem('dom-floral-favorites') || '[]');
   favorites = Array.isArray(savedFavorites) ? savedFavorites.filter(id => findFlower(id)) : [];
@@ -56,6 +60,7 @@ function persist() {
 }
 function flowerTotal() { return state.stems.reduce((sum, stem) => sum + findFlower(stem.flower).price, 0); }
 function renderCatalog(filter = 'all') {
+  $('#home-filters [data-filter="all"] span').textContent = String(FLOWERS.length).padStart(2, '0');
   $('#flower-grid').innerHTML = FLOWERS.filter(f => filter === 'all' || f.type === filter).map(f => `<article class="flower-card"><div class="flower-photo"><span class="flower-tag">${f.tag}</span><button class="favorite-button" aria-label="Yêu thích ${f.name}" aria-pressed="${favorites.includes(f.id)}" data-favorite="${f.id}">${favorites.includes(f.id) ? '♥' : '♡'}</button><div role="img" aria-label="Một cành ${f.name}, tách nền" class="sprite sprite-${f.sprite}"></div></div><div class="flower-details"><h3>${f.name}</h3><span class="flower-latin">${f.latin}</span><span class="flower-price">${money(f.price)} <small>/ cành</small></span><button class="add-flower" data-add="${f.id}" aria-label="Thêm ${f.name} vào bó">+</button></div></article>`).join('');
 }
 function renderStudioCatalog() {
@@ -63,7 +68,7 @@ function renderStudioCatalog() {
 }
 function makeStem(flower, index = state.stems.length) {
   const rotations = [-18, 15, -6, 25, -28, 7, -13, 19, 0];
-  return { uid: crypto.randomUUID(), flower, x: 50 + ((index % 3) - 1) * 5, y: 40 + (index % 3) * 4, rotation: rotations[index % rotations.length] };
+  return { uid: crypto.randomUUID(), flower, x: 50 + ((index % 3) - 1) * 5, y: 40 + (index % 3) * 4, rotation: rotations[index % rotations.length], ...normalizeStemFinish({}, findFlower(flower)) };
 }
 function addStem(id) {
   if (state.stems.length >= 18) { toast('Bó nhỏ tối đa 18 cành. Bạn bỏ bớt một cành để thử hoa mới nhé.'); return; }
@@ -80,9 +85,9 @@ function setStemStyle(element, stem) {
   element.style.transform = `translate(-50%, -50%) rotate(${stem.rotation}deg)`;
 }
 function renderSelection() {
-  $$('.placed-stem').forEach(el => el.classList.toggle('active', el.dataset.uid === selected));
+  $$('.placed-stem').forEach(el => { const active = el.dataset.uid === selected; el.classList.toggle('active', active); el.setAttribute('aria-pressed', active); });
   const stem = state.stems.find(s => s.uid === selected);
-  $('#selection-label').textContent = stem ? `${findFlower(stem.flower).name} · ${stem.rotation}°` : 'Chọn một cành để chỉnh';
+  $('#selection-label').textContent = stem ? `${findFlower(stem.flower).name} · ${stem.rotation}°${stem.leaves === false ? ' · không lá' : ''}${stem.trim ? ` · cắt ${stem.trim}%` : ''}` : 'Chọn một cành để chỉnh';
   $$('#stem-controls button').forEach(button => button.disabled = !stem);
   $('#selected-list').innerHTML = state.stems.length ? [...state.stems].reverse().map((s, index) => `<div class="selected-item ${s.uid === selected ? 'chosen' : ''}"><button data-select="${s.uid}" aria-label="Chọn ${findFlower(s.flower).name}, lớp ${state.stems.length - index}"><span class="sprite sprite-${findFlower(s.flower).sprite}"></span>${findFlower(s.flower).name}</button><button data-move="front" data-uid="${s.uid}" aria-label="Đưa ${findFlower(s.flower).name} lên một lớp" ${index === 0 ? 'disabled' : ''}>↑</button><button data-move="back" data-uid="${s.uid}" aria-label="Đưa ${findFlower(s.flower).name} xuống một lớp" ${index === state.stems.length - 1 ? 'disabled' : ''}>↓</button><button data-remove="${s.uid}" aria-label="Bỏ ${findFlower(s.flower).name}">×</button></div>`).join('') : '<p class="empty-selection">Bàn hoa đang chờ bạn chọn cành đầu tiên ♡</p>';
   document.dispatchEvent(new CustomEvent('bouquet:selection',{detail:{uid:selected}}));
@@ -91,13 +96,14 @@ function renderBouquet(enteringUid = null) {
   const layer = $('#stem-layer');
   const nodes = new Map([...layer.children].map(el => [el.dataset.uid, el]));
   const ids = new Set(state.stems.map(s => s.uid));
-  nodes.forEach((node, uid) => { if (!ids.has(uid)) node.remove(); });
+  nodes.forEach((node, uid) => { if (!ids.has(uid)) { stemSizeObserver.unobserve(node); node.remove(); } });
   state.stems.forEach((stem, index) => {
     const flower = findFlower(stem.flower);
     const el = nodes.get(stem.uid) || document.createElement('button');
     if (!nodes.has(stem.uid)) {
       el.className = 'placed-stem';
-      el.innerHTML = `<span class="sprite sprite-${flower.sprite}"></span>`;
+      el.type = 'button';
+      stemSizeObserver.observe(el);
     }
     if (stem.uid === enteringUid) el.classList.add('stem-entering');
     el.dataset.uid = stem.uid;
@@ -105,6 +111,7 @@ function renderBouquet(enteringUid = null) {
     el.style.zIndex = index + 1;
     setStemStyle(el, stem);
     layer.append(el);
+    renderStemArtwork(el, stem);
   });
   $('#bouquet-canvas').classList.toggle('has-flowers', state.stems.length > 0);
   $('#canvas-guide').hidden = state.stems.length > 0;
@@ -123,20 +130,33 @@ function renderBouquet(enteringUid = null) {
   renderSelection();
   document.dispatchEvent(new CustomEvent('bouquet:updated'));
 }
+function setSiteView(id) {
+  const target=document.getElementById(id);
+  const changed=target?.hidden!==false;
+  ['home-view','studio-view','bouquets-view','feedback-view'].forEach(view=>{const element=document.getElementById(view);if(element)element.hidden=view!==id;});
+  document.body.dataset.view=id;
+  document.dispatchEvent(new CustomEvent('site:view',{detail:{id}}));
+  return changed;
+}
 function showHome(section) {
-  $('#home-view').hidden = false;
-  $('#studio-view').hidden = true;
+  setSiteView('home-view');
   closeMenu();
   requestAnimationFrame(() => { if (section) document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' }); else window.scrollTo({ top: 0, behavior: 'smooth' }); });
 }
 function openStudio() {
   if (location.hash !== '#studio') { location.hash = 'studio'; return; }
-  $('#home-view').hidden = true;
-  $('#studio-view').hidden = false;
+  setSiteView('studio-view');
   closeMenu();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
-function route() { if (location.hash === '#studio') openStudio(); else showHome(location.hash.slice(1)); }
+function route() {
+  const page=location.hash.slice(1).split('/')[0];
+  if(page==='studio')openStudio();
+  else if(page==='bouquets' || page==='feedback'){
+    const changed=setSiteView(page+'-view');closeMenu();if(changed)window.scrollTo({top:0,behavior:'instant'});
+    document.dispatchEvent(new CustomEvent('site:route',{detail:{page}}));
+  }else showHome(location.hash.slice(1));
+}
 function closeMenu() { $('#mobile-nav').hidden = true; $('#menu-toggle').setAttribute('aria-expanded', 'false'); }
 function selectStem(uid) { selected = uid; renderSelection(); }
 function removeStem(uid) {
@@ -277,15 +297,19 @@ $('#apply-mood').addEventListener('click', () => {
 $('#mood-dialog').addEventListener('close', () => { $('#apply-mood').removeAttribute('data-confirm-mood'); $('#apply-mood').innerHTML = 'Đơm thử bó này <span>↗</span>'; });
 $$('dialog').forEach(dialog => dialog.addEventListener('click', event => { if (event.target !== dialog) return; const rect = dialog.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close(); }));
 function localDate() { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
-function prepareOrder() {
-  if (!state.stems.length) { toast('Bạn chọn một vài cành hoa trước nhé ♡'); openStudio(); return; }
+function prepareOrder(configuration = state, source = null) {
+  const orderState=configuration && Array.isArray(configuration.stems)?configuration:state;
+  if (!orderState.stems.length) { toast('Bạn chọn một vài cành hoa trước nhé ♡'); openStudio(); return; }
   const counts = {};
-  state.stems.forEach(s => counts[s.flower] = (counts[s.flower] || 0) + 1);
-  const gift=giftOrderInfo(state);
-  currentOrder = { flowers: Object.entries(counts).map(([id, quantity]) => ({ name: findFlower(id).name, quantity, price: findFlower(id).price })), paper: PAPERS[state.paper].name, ribbon: RIBBONS[state.ribbon].name, title: state.title, note: state.note, digitalMessage:state.cardMessage, gift, total: flowerTotal() + gift.prices.total };
+  orderState.stems.forEach(s => counts[s.flower] = (counts[s.flower] || 0) + 1);
+  const gift=giftOrderInfo(orderState);
+  const selectedFlowerPrice=orderState.stems.reduce((sum,stem)=>sum+findFlower(stem.flower).price,0);
+  currentOrder = { flowers: Object.entries(counts).map(([id, quantity]) => ({ name: findFlower(id).name, quantity, price: findFlower(id).price })), stemFinishes: stemFinishGroups(orderState.stems, FLOWERS), paper: PAPERS[orderState.paper].name, ribbon: RIBBONS[orderState.ribbon].name, title: orderState.title, note: orderState.note, digitalMessage:orderState.cardMessage, gift, total: selectedFlowerPrice + gift.prices.total, source:source?.productId?{type:'catalog',productId:source.productId}:null };
   const card=gift.greeting;
-  $('#order-summary').innerHTML = `${currentOrder.title ? `<p>${escapeHTML(currentOrder.title)}</p>` : ''}<span>${state.stems.length} cành hoa · ${gift.wrapName}${state.wrapStyle==='none'?'':` · Màu ${PAPERS[state.paper].name.toLowerCase()}`} · Nơ ${RIBBONS[state.ribbon].name.toLowerCase()}</span><ul>${currentOrder.flowers.map(f => `<li>${f.quantity} × ${f.name} — ${money(f.quantity*f.price)}</li>`).join('')}</ul><div class="order-gift-lines"><p>${gift.wrapName} & nơ: ${money(gift.prices.wrapping)}</p>${card?`<p>${card.name} · ${card.writing}: ${money(card.price)}</p><p>Gửi ${escapeHTML(card.to || 'người thương')} · Từ ${escapeHTML(card.from || '(không ghi tên)')}</p><blockquote>${escapeHTML(card.message || '(Chưa viết lời nhắn)')}</blockquote>`:''}${gift.addOns.map(item=>`<p>${item.quantity} × ${item.name}: ${money(item.quantity*item.unitPrice)}</p>`).join('')}</div>${currentOrder.note ? `<p>Ghi chú cho tiệm: ${escapeHTML(currentOrder.note)}</p>` : ''}<strong>Tạm tính: ${money(currentOrder.total)} · Chưa gồm phí giao</strong>`;
+  $('#order-summary').innerHTML = `${currentOrder.title ? `<p>${currentOrder.source?'Mẫu bó sẵn: ':''}${escapeHTML(currentOrder.title)}</p>` : ''}<span>${orderState.stems.length} cành hoa · ${gift.wrapName}${orderState.wrapStyle==='none'?'':` · Màu ${PAPERS[orderState.paper].name.toLowerCase()}`} · Nơ ${RIBBONS[orderState.ribbon].name.toLowerCase()}</span><ul>${currentOrder.flowers.map(f => `<li>${f.quantity} × ${f.name} — ${money(f.quantity*f.price)}</li>`).join('')}</ul><div class="order-gift-lines"><p>${gift.wrapName} & nơ: ${money(gift.prices.wrapping)}</p>${card?`<p>${card.name} · ${card.writing}: ${money(card.price)}</p><p>Gửi ${escapeHTML(card.to || 'người thương')} · Từ ${escapeHTML(card.from || '(không ghi tên)')}</p><blockquote>${escapeHTML(card.message || '(Chưa viết lời nhắn)')}</blockquote>`:''}${gift.addOns.map(item=>`<p>${item.quantity} × ${item.name}: ${money(item.quantity*item.unitPrice)}</p>`).join('')}</div>${currentOrder.note ? `<p>Ghi chú cho tiệm: ${escapeHTML(currentOrder.note)}</p>` : ''}<strong>Tạm tính: ${money(currentOrder.total)} · Chưa gồm phí giao</strong>`;
   $('#delivery-date').min = localDate();
+  const customFinishes = currentOrder.stemFinishes.filter(finish => !finish.leaves || finish.trim);
+  if (customFinishes.length) $('#order-summary').insertAdjacentHTML('beforeend', `<div class="order-stem-finishes"><p><b>Chỉnh cành theo bản phối</b></p>${customFinishes.map(finish => `<p>${escapeHTML(stemFinishLabel(finish))}</p>`).join('')}</div>`);
   if (!$('#delivery-date').value || $('#delivery-date').value < localDate()) $('#delivery-date').value = localDate();
   $('#order-form-view').hidden = false;
   $('#order-success').hidden = true;
@@ -312,7 +336,8 @@ function orderText() {
   const order = currentOrder;
   const customer = order.customer;
   const card=order.gift.greeting;
-  return ['ĐƠM. FLORAL — PHIẾU ĐẶT HOA NHÁP', 'Chưa gửi đến tiệm / chưa được xác nhận', '', `Tên: ${customer.name}`, `Điện thoại: ${customer.phone}`, `Ngày nhận mong muốn: ${customer.date}`, `Cách nhận: ${customer.delivery === 'delivery' ? 'Giao hoa' : 'Nhận tại tiệm'}`, customer.delivery === 'delivery' ? `Địa chỉ: ${customer.address}` : '', '', order.title ? `Tên bó hoa: ${order.title}` : '', ...order.flowers.map(f => `${f.quantity} × ${f.name} — ${money(f.quantity * f.price)}`), `${order.gift.wrapName}${order.gift.wrapStyle==='none'?'':` / màu ${order.paper.toLowerCase()}`} & nơ ${order.ribbon.toLowerCase()}: ${money(order.gift.prices.wrapping)}`, ...order.gift.addOns.map(item=>`${item.quantity} × ${item.name}: ${money(item.quantity*item.unitPrice)}`), ...(card?['',`THIỆP ĐÍNH KÈM: ${card.name} — ${money(card.price)}`,`Kiểu chữ: ${card.writing}`,`Gửi: ${card.to || '(Không ghi)'}`,`Từ: ${card.from || '(Không ghi)'}`,`Nội dung thiệp:\n${card.message || '(Chưa viết)'}`]:[]), '',`Ghi chú riêng cho tiệm: ${order.note || '(Không có)'}`, `Tạm tính: ${money(order.total)}. Chưa bao gồm phí giao hàng.`, 'Hoa, phụ kiện và giá cần được tiệm xác nhận trước khi thanh toán.'].filter(line => line !== null).join('\n');
+  const finishLines = (order.stemFinishes || []).filter(finish => !finish.leaves || finish.trim).map(stemFinishLabel);
+  return ['ĐƠM. FLORAL — PHIẾU ĐẶT HOA NHÁP', 'Chưa gửi đến tiệm / chưa được xác nhận', '', `Tên: ${customer.name}`, `Điện thoại: ${customer.phone}`, `Ngày nhận mong muốn: ${customer.date}`, `Cách nhận: ${customer.delivery === 'delivery' ? 'Giao hoa' : 'Nhận tại tiệm'}`, customer.delivery === 'delivery' ? `Địa chỉ: ${customer.address}` : '', '', order.title ? `Tên bó hoa: ${order.title}` : '', ...(finishLines.length ? ['CHỈNH CÀNH THEO BẢN PHỐI', ...finishLines, ''] : []), ...order.flowers.map(f => `${f.quantity} × ${f.name} — ${money(f.quantity * f.price)}`), `${order.gift.wrapName}${order.gift.wrapStyle==='none'?'':` / màu ${order.paper.toLowerCase()}`} & nơ ${order.ribbon.toLowerCase()}: ${money(order.gift.prices.wrapping)}`, ...order.gift.addOns.map(item=>`${item.quantity} × ${item.name}: ${money(item.quantity*item.unitPrice)}`), ...(card?['',`THIỆP ĐÍNH KÈM: ${card.name} — ${money(card.price)}`,`Kiểu chữ: ${card.writing}`,`Gửi: ${card.to || '(Không ghi)'}`,`Từ: ${card.from || '(Không ghi)'}`,`Nội dung thiệp:\n${card.message || '(Chưa viết)'}`]:[]), '',`Ghi chú riêng cho tiệm: ${order.note || '(Không có)'}`, `Tạm tính: ${money(order.total)}. Chưa bao gồm phí giao hàng.`, 'Hoa, phụ kiện và giá cần được tiệm xác nhận trước khi thanh toán.'].filter(line => line !== null).join('\n');
 }
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -324,17 +349,8 @@ $('#copy-order').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(orderText()); toast('Đã sao chép phiếu hoa.'); }
   catch { downloadBlob(new Blob(['\ufeff' + orderText()], { type: 'text/plain;charset=utf-8' }), 'dom-floral-phieu-dat-hoa.txt'); toast('Không thể sao chép ở trình duyệt này, mình đã chuẩn bị bản tải về.'); }
 });
-const atlas = new Image(); atlas.src = 'assets/flower-stems.png';
 async function ensureAtlasReady() {
-  if (atlas.complete && atlas.naturalWidth > 0) return;
-  await new Promise((resolve,reject) => {
-    const done = error => { clearTimeout(timer); atlas.removeEventListener('load',loaded); atlas.removeEventListener('error',failed); error ? reject(error) : resolve(); };
-    const loaded = () => done();
-    const failed = () => done(new Error('Flower image unavailable'));
-    const timer = setTimeout(failed,5000);
-    atlas.addEventListener('load',loaded,{once:true}); atlas.addEventListener('error',failed,{once:true});
-    if (atlas.complete) atlas.naturalWidth > 0 ? loaded() : failed();
-  });
+  await Promise.all(state.stems.map(loadStemArtwork));
 }
 function canvasToPNGBlob(canvas) {
   const data=canvas.toDataURL('image/png').split(',')[1];
@@ -347,8 +363,8 @@ function animatePaper() {
 }
 function arrangeNaturally() {
   if (!state.stems.length) { toast('Chọn vài cành trước, Đơm sẽ giúp bạn xếp nhé.'); return; }
-  const rank = { eucalyptus: 0, stock: 1, tulip: 2, lisianthus: 3, daisy: 4, rose: 5 };
-  state.stems.sort((a,b) => rank[a.flower] - rank[b.flower]);
+  const rank = { eucalyptus: 0, stock: 1, calla: 2, tulip: 2, lisianthus: 3, daisy: 4, carnation: 4, gerbera: 5, sunflower: 5, rose: 5 };
+  state.stems.sort((a,b) => (rank[a.flower] ?? 3) - (rank[b.flower] ?? 3));
   const total = state.stems.length;
   state.stems.forEach((stem, i) => {
     const row = Math.floor(i / 7), rowSize = Math.min(7, total - row * 7), col = i % 7;
@@ -366,12 +382,14 @@ async function drawBouquet(ctx, bounds) {
   const element = $('.placed-stem');
   const ratio = element && stage.clientWidth ? element.offsetWidth / stage.clientWidth : .58;
   const size = width * ratio;
+  const artworks = await Promise.all(config.stems.map(loadStemArtwork));
   await paintGiftLayer(ctx,config,'back',bounds);
   ctx.save(); ctx.translate(bx, by);
-  config.stems.forEach(stem => {
-    const sprite = findFlower(stem.flower).sprite;
+  config.stems.forEach((stem, index) => {
+    const artwork = artworks[index];
+    const bottom = stem.trim ? stemCropBottom(artwork.bounds, stem.trim) : STEM_CELL_SIZE;
     ctx.save(); ctx.translate(width * stem.x / 100, height * stem.y / 100 + size * .4); ctx.rotate(stem.rotation * Math.PI/180);
-    ctx.drawImage(atlas, (sprite%3)*512, Math.floor(sprite/3)*512, 512,512,-size/2,-size*.9,size,size); ctx.restore();
+    ctx.drawImage(artwork.canvas, 0, 0, STEM_CELL_SIZE, bottom, -size/2, -size*.9, size, size * bottom / STEM_CELL_SIZE); ctx.restore();
   });
   ctx.restore();
   await paintGiftLayer(ctx,config,'front',bounds);

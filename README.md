@@ -1,5 +1,23 @@
 # Đơm. floral
 
+## Bó hoa của Đơm & lời thương
+
+- `#bouquets` là trang bộ sưu tập bốn mẫu bó concept: tìm tên bó/thành phần không cần dấu tiếng Việt, lọc cảm xúc và khoảng giá, sắp xếp và lưu yêu thích trên thiết bị.
+- `#bouquets/<mã-mẫu>` mở chi tiết qua link có thể chia sẻ hoặc tải lại: ảnh lớn, thành phần, giấy gói, giá và feedback liên quan. Giá lấy từ cùng bảng hoa và kiểu gói của bàn phối.
+- “Chuẩn bị đặt bó này” tạo phiếu nháp riêng, không thay bản phối đang có. “Tự chỉnh từ mẫu này” cần xác nhận khi bàn có hoa; có nút khôi phục bản phối trước trong phiên hiện tại.
+- `#feedback` là trang feedback thật. Hiện dữ liệu thật rỗng, không hiển thị điểm sao hoặc số khách giả. Có phần xem bố cục minh họa riêng, chỉ bật khi người xem chọn; ảnh và nội dung mẫu được ghi nhãn rõ ràng.
+- Feedback hỗ trợ tên người gửi, ngày, đánh giá tùy chọn, nội dung, ảnh và liên kết về mẫu bó. Các bộ lọc theo bó/có ảnh và chế độ xem ảnh lớn hoạt động với dữ liệu được bổ sung.
+
+Dữ liệu nằm trong [shop-data.js](./dist/shop-data.js): thay ảnh concept và công thức/giá phù hợp trong `SHOP_BOUQUETS`; thêm feedback thật được khách đồng ý chia sẻ vào `SHOP_FEEDBACK`. Mỗi feedback có dạng:
+
+```js
+{ id: 'feedback-001', author: 'Tên khách đã đồng ý đăng', date: '2026-11-17',
+  rating: 5, text: 'Nội dung phản hồi thật', productId: 'mot-chut-thuong',
+  photos: ['assets/feedback/anh-duoc-khach-cho-phep.jpg'] }
+```
+
+Đây chỉ là cấu trúc nhập liệu, không phải feedback đã được đăng. Có thể bỏ `rating` hoặc dùng `photos: []`. Hãy dùng ảnh/nội dung thật đã được phép công khai. Trang chủ và menu có lối vào hai trang mới. Giao diện ở [shop.js](./dist/shop.js) và [shop.css](./dist/shop.css).
+
 ## Bàn gói quà
 
 - Sáu kiểu gói: chữ V, quạt Hàn, cánh hoa nhiều lớp, ống tối giản, giấy báo và voan trong; thêm lựa chọn chỉ thắt nơ.
@@ -43,8 +61,8 @@ Bản thiết kế tương tác đầu tiên cho tiệm hoa Đơm. floral.
 ## Các trải nghiệm đã dựng
 
 1. Trang chủ: giới thiệu, hoa hôm nay, bàn đơm hoa, bốn tâm trạng, câu chuyện hai người xây tiệm và câu hỏi thường gặp.
-2. Hoa hôm nay: sáu cành hoa/lá minh họa tách nền, lọc nhóm, đánh dấu yêu thích và thêm cành vào bó.
-3. Bàn đơm hoa: thêm tối đa 18 cành, kéo thả, di chuyển bằng phím mũi tên, xoay, đổi lớp, xóa cành, chọn bốn giấy gói, nhập lời nhắn và xem giá tạm tính.
+2. Hoa hôm nay: mười loại hoa/lá minh họa tách nền, gồm calla đỏ rượu, đồng tiền cam đào, cẩm chướng hồng và hướng dương vàng bơ; lọc nhóm, đánh dấu yêu thích và thêm cành vào bó.
+3. Bàn đơm hoa: thêm tối đa 18 cành, kéo thả theo hình hoa thực tế (phần ảnh trong suốt cho thao tác đi xuyên xuống cành phía sau), di chuyển bằng phím, xoay, đổi lớp và xóa. Mỗi cành có tùy chọn giữ/bỏ lá, cắt ngắn 0–40% từ phía dưới và khôi phục nguyên cành. Eucalyptus là cành lá nên giữ tán lá. Chỉnh cành tự lưu, xuất đúng trong PNG/bưu thiếp và ghi riêng từng cách chỉnh vào phiếu nháp.
 4. Gợi ý mood: dịu dàng, thương một người, hôm nay thật vui và tặng mình. Có xác nhận ngay trong nút trước khi thay bó đã chọn.
 5. Lưu ảnh bó hoa PNG, tự lưu bản phối trên trình duyệt và phiếu đặt hoa nháp có thể tải/sao chép.
 6. Giao diện đáp ứng: cột hoa cuộn ngang trên điện thoại, menu thu gọn, dialog và form dùng được với bàn phím.
